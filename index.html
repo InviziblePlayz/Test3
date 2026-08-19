@@ -1,0 +1,432 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Invizz Arcade</title>
+<style>
+:root{--a:#a855f7;--b:#7c3aed;--bg:#08050d;--card:#120d19;--txt:#fff;--muted:#aaa;--line:#30203d}
+*{box-sizing:border-box}body{margin:0;font-family:Arial,sans-serif;background:radial-gradient(circle at top,#241033,var(--bg) 60%);color:var(--txt);min-height:100vh}
+body.light{--bg:#f4f4f5;--card:#fff;--txt:#151515;--muted:#666;--line:#ddd;background:var(--bg)}
+body.red{--a:#ef4444;--b:#b91c1c}body.blue{--a:#3b82f6;--b:#1d4ed8}body.orange{--a:#f97316;--b:#c2410c}body.green{--a:#22c55e;--b:#15803d}body.pink{--a:#ec4899;--b:#be185d}body.yellow{--a:#eab308;--b:#a16207}
+body.rainbow{--a:#ff4da6;--b:#7c3aed;background:linear-gradient(120deg,#ff004c,#ff8a00,#ffee00,#00e676,#00b0ff,#7c4dff,#ff00aa);background-size:400% 400%;animation:rb 8s ease infinite}
+@keyframes rb{50%{background-position:100% 50%}}
+header{position:sticky;top:0;z-index:10;background:#08050de8;backdrop-filter:blur(12px);border-bottom:1px solid var(--line)}
+nav,.wrap{max-width:1150px;margin:auto}nav{padding:14px 18px;display:flex;justify-content:space-between;align-items:center}.logo{font-weight:900;font-size:22px;color:var(--a);text-shadow:0 0 18px var(--a)}
+.wrap{padding:25px 18px}.hero{text-align:center;padding:35px 0}.hero h1{font-size:clamp(40px,9vw,72px);margin:0}.hero span{color:var(--a)}.hero p{color:var(--muted)}
+.stats{display:flex;justify-content:center;gap:10px;flex-wrap:wrap}.stat,.panel,.game{background:var(--card);border:1px solid var(--line);border-radius:16px}.stat{padding:10px 16px}
+.games{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:15px}.game{padding:20px;min-height:145px;cursor:pointer;transition:.2s}.game:hover{transform:translateY(-4px);border-color:var(--a);box-shadow:0 0 25px #a855f744}.icon{font-size:42px}.game p{color:var(--muted);font-size:14px}
+.panel{padding:18px;margin-top:10px}button{padding:10px 14px;border-radius:10px;border:1px solid var(--line);background:var(--card);color:var(--txt);cursor:pointer;margin:3px}button:hover{border-color:var(--a)}.primary{background:var(--a);border:0;color:#fff}
+.modal{position:fixed;inset:0;background:#000b;z-index:100;display:flex;align-items:center;justify-content:center;padding:15px}.hidden{display:none}.box{width:min(650px,100%);max-height:92vh;overflow:auto;background:var(--card);border:1px solid var(--a);border-radius:20px;padding:20px;box-shadow:0 0 35px #a855f755}.close{float:right}
+input,textarea,select{width:100%;padding:11px;margin:7px 0 13px;background:var(--bg);color:var(--txt);border:1px solid var(--line);border-radius:9px}
+.themegrid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.locked{opacity:.5}.feedback{border:1px solid var(--line);border-radius:12px;padding:13px;margin:9px 0}.owner{color:#facc15;font-weight:bold}
+canvas{display:block;max-width:100%;margin:15px auto;background:#030206;border:2px solid var(--a);border-radius:12px;touch-action:none}
+.gameTop{display:flex;justify-content:space-between;align-items:center;gap:10px}
+.dpad{width:180px;height:180px;margin:14px auto;display:grid;grid-template-columns:60px 60px 60px;grid-template-rows:60px 60px 60px;justify-content:center;align-items:center}
+.dpad button{width:56px;height:56px;margin:2px;border-radius:14px;background:var(--card);border:2px solid var(--a);font-size:24px;font-weight:900;touch-action:manipulation;-webkit-tap-highlight-color:transparent}
+.dpad button:active{transform:scale(.92);background:var(--a);color:#fff}
+.dpad .up{grid-column:2;grid-row:1}.dpad .left{grid-column:1;grid-row:2}.dpad .dcenter{grid-column:2;grid-row:2}.dpad .right{grid-column:3;grid-row:2}.dpad .down{grid-column:2;grid-row:3}
+.hidden{display:none!important}
+.fullscreen-game{width:100vw!important;height:100vh!important;max-width:none!important;border-radius:0!important;padding:14px!important}
+footer{text-align:center;color:var(--muted);padding:35px}
+</style>
+</head>
+<body>
+<header><nav><div class="logo">⚡ INVIZZ ARCADE</div><div><button onclick="profile()">👤</button><button onclick="settings()">⚙️</button></div></nav></header>
+<div class="wrap">
+<div class="hero"><h1>INVIZZ <span>ARCADE</span></h1><p>Play • Challenge • Earn • Unlock</p>
+<div class="stats"><div class="stat">🪙 <b id="coins">0</b></div><div class="stat">🏆 <b id="ach">0</b></div><div class="stat">👤 <b id="user"></b></div></div></div>
+<h2>🎮 Mini Games</h2>
+<div class="games">
+<div class="game"><div class="icon">🐍</div><h3>Snake</h3><p>Classic snake with touch, swipe and keyboard controls.</p><button class="primary" onclick="snake()">▶ PLAY</button><button onclick="details('snake')">ℹ DETAILS</button></div>
+<div class="game"><div class="icon">🧱</div><h3>Brick Breaker</h3><p>Break bricks, survive 3 lives and collect power-ups.</p><button class="primary" onclick="brick()">▶ PLAY</button><button onclick="details('brick')">ℹ DETAILS</button></div>
+<div class="game"><div class="icon">⚡</div><h3>Reaction Test</h3><p>Wait for the signal and test your reaction speed.</p><button class="primary" onclick="reaction()">▶ PLAY</button><button onclick="details('reaction')">ℹ DETAILS</button></div>
+<div class="game"><div class="icon">❌⭕</div><h3>Tic-Tac-Toe</h3><p>Local 2-player X vs O game.</p><button class="primary" onclick="ttt()">▶ PLAY</button><button onclick="details('ttt')">ℹ DETAILS</button></div>
+</div>
+<h2 style="margin-top:35px">🏆 Leaderboard</h2><div class="panel" id="board"></div>
+<h2 style="margin-top:35px">💬 Feedback</h2><div class="panel"><button class="primary" onclick="feedbackForm()">Give Feedback</button><div id="feedback"></div></div>
+</div><footer>Invizz Arcade © 2026</footer>
+
+<div class="modal hidden" id="modal"><div class="box"><button class="close" onclick="closeModal()">✕</button><div id="content"></div></div></div>
+<div class="modal hidden" id="set"><div class="box"><button class="close" onclick="this.closest('.modal').classList.add('hidden')">✕</button><h2>⚙️ Settings</h2>
+<p>🟣 Purple is the default theme. Other colours unlock with coins.</p><div class="themegrid" id="themes"></div>
+<hr><button onclick="mode('dark')">🌙 Dark</button><button onclick="mode('light')">☀️ Light</button>
+<hr><h3>Username</h3><p>First change is free. Later changes cost 100 coins.</p><b id="current"></b><br><button class="primary" onclick="changeName()">✏️ Change Username</button>
+<hr><button class="primary" onclick="feedbackForm();this.closest('.modal').classList.add('hidden')">💬 Feedback</button></div></div>
+<div class="modal hidden" id="prof"><div class="box"><button class="close" onclick="this.closest('.modal').classList.add('hidden')">✕</button><h2>👤 Profile</h2><div id="pi"></div><h3>🏆 Achievements</h3><div id="alist"></div><h3>🎯 Quests</h3><div id="clist"></div></div></div>
+
+<script>
+const OWNER="InviziblePlayz";
+let user=localStorage.getItem("ia_user")||"Player"+Math.floor(Math.random()*9000+1000);
+if(user.toLowerCase()===OWNER.toLowerCase())user="Player"+Math.floor(Math.random()*9000+1000);
+let coins=+localStorage.getItem("ia_coins")||0, changed=localStorage.getItem("ia_changed")==="1";
+let ach=JSON.parse(localStorage.getItem("ia_ach")||"[]"), fb=JSON.parse(localStorage.getItem("ia_fb")||"[]");
+let unlocked=JSON.parse(localStorage.getItem("ia_themes")||'["purple"]');
+const cost={red:100,blue:100,orange:150,green:150,pink:200,yellow:200,rainbow:500};
+const label={purple:"🟣 Purple",red:"🔴 Red",blue:"🔵 Blue",orange:"🟠 Orange",green:"🟢 Green",pink:"🩷 Pink",yellow:"🟡 Yellow",rainbow:"🌈 Rainbow"};
+localStorage.setItem("ia_user",user);
+function save(){localStorage.setItem("ia_user",user);localStorage.setItem("ia_coins",coins);localStorage.setItem("ia_changed",changed?"1":"0");localStorage.setItem("ia_ach",JSON.stringify(ach));localStorage.setItem("ia_fb",JSON.stringify(fb));localStorage.setItem("ia_themes",JSON.stringify(unlocked));render()}
+function render(){coinsEl.textContent=coins;document.getElementById("ach").textContent=ach.length;document.getElementById("user").textContent=user;document.getElementById("board").innerHTML=[{n:user,s:coins},{n:"ArcadePlayer",s:850},{n:"GameMaster",s:620},{n:"PixelKing",s:440}].sort((a,b)=>b.s-a.s).map((x,i)=>`<div style="display:flex;justify-content:space-between;padding:11px;border-bottom:1px solid var(--line)">${i?"#"+(i+1):"👑"} ${esc(x.n)} <b>🪙 ${x.s}</b></div>`).join("");renderFB()}
+const coinsEl=document.getElementById("coins");function esc(s){return String(s).replace(/[&<>"]/g,x=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[x]))}
+function settings(){document.getElementById("set").classList.remove("hidden");document.getElementById("current").textContent=user;renderThemes()}
+function mode(x){document.body.classList.toggle("light",x==="light");localStorage.setItem("ia_mode",x)}
+function renderThemes(){let d=document.getElementById("themes");d.innerHTML="";Object.keys(label).forEach(t=>{let b=document.createElement("button"),ok=unlocked.includes(t);b.className=ok?"":"locked";b.innerHTML=ok?label[t]+" ✓":`🔒 ${label[t]}<br>🪙 ${cost[t]}`;b.onclick=()=>ok?theme(t):unlock(t);d.appendChild(b)})}
+function theme(t){["red","blue","orange","green","pink","yellow","rainbow"].forEach(x=>document.body.classList.remove(x));if(t!="purple")document.body.classList.add(t);localStorage.setItem("ia_theme",t)}
+function unlock(t){if(coins<cost[t])return alert("Not enough coins.");coins-=cost[t];unlocked.push(t);save();theme(t)}
+function changeName(){let n=prompt("New username:");if(!n)return;n=n.trim().replace(/[<>]/g,"").slice(0,20);if(n.length<3||n.toLowerCase()===OWNER.toLowerCase())return alert("Invalid username.");if(changed&&coins<100)return alert("100 coins required.");if(changed)coins-=100;user=n;changed=true;save();alert("Username updated!")}
+function profile(){document.getElementById("prof").classList.remove("hidden");document.getElementById("pi").innerHTML=`<div class="panel">👤 <b>${esc(user)}</b><br><br>🪙 ${coins} Coins</div>`;document.getElementById("alist").innerHTML=["🐍 Snake Master","🧱 Brick Master","⚡ Speedster","🎮 Arcade Player","👑 Arcade Legend"].map(x=>`<div class="panel">${x}</div>`).join("");document.getElementById("clist").innerHTML=["🎯 Play 3 games — +30 coins","🎯 Complete a brick level — +10 coins","🎯 Score 5 in Snake — +25 coins"].map(x=>`<div class="panel">${x}</div>`).join("")}
+function open(){document.getElementById("modal").classList.remove("hidden")}function closeModal(){document.getElementById("modal").classList.add("hidden");clearInterval(st)}
+let st=null,snakeData=[],dir={x:1,y:0},food={},ss=0;
+function snake(){
+open();
+document.getElementById("content").innerHTML=`<div class="gameTop"><h2>🐍 Snake</h2><button onclick="exitGame()">↩ BACK</button></div>
+<p>Use the D-pad, keyboard arrows, or swipe directly on the game.</p>
+<canvas id="sc" width="320" height="320"></canvas>
+<div class="dpad" aria-label="Snake D-pad">
+<button class="up" onclick="sd(0,-1)">▲</button>
+<button class="left" onclick="sd(-1,0)">◀</button>
+<div class="dcenter">●</div>
+<button class="right" onclick="sd(1,0)">▶</button>
+<button class="down" onclick="sd(0,1)">▼</button>
+</div><br>
+<button class="primary" onclick="ssStart()">▶ START</button>
+<button onclick="ssStart()">🔄 RETRY</button>
+<button onclick="full()">⛶ FULLSCREEN</button><button id="fsBack" class="hidden" onclick="exitFullscreen()">↩ BACK TO NORMAL</button>`;
+ssStart(false);
+let c=document.getElementById("sc"), sx=0, sy=0;
+c.addEventListener("touchstart",e=>{let t=e.changedTouches[0];sx=t.clientX;sy=t.clientY},{passive:true});
+c.addEventListener("touchend",e=>{
+let t=e.changedTouches[0],dx=t.clientX-sx,dy=t.clientY-sy;
+if(Math.max(Math.abs(dx),Math.abs(dy))<20)return;
+if(Math.abs(dx)>Math.abs(dy)) sd(dx>0?1:-1,0); else sd(0,dy>0?1:-1);
+},{passive:true});
+}
+function ssStart(run=true){
+clearInterval(st);
+snakeData=[{x:10,y:10},{x:9,y:10},{x:8,y:10}];
+dir={x:1,y:0};ss=0;
+food={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)};
+drawS();if(run)st=setInterval(tickS,120);
+}
+function sd(x,y){
+if(x===-dir.x&&y===-dir.y)return;
+dir={x,y};
+}
+function tickS(){
+let h={x:snakeData[0].x+dir.x,y:snakeData[0].y+dir.y};
+let hitsSelf=snakeData.some((s,i)=>i>0&&s.x===h.x&&s.y===h.y);
+if(h.x<0||h.y<0||h.x>19||h.y>19||hitsSelf){
+clearInterval(st);back("💥","GAME OVER",`Score: ${ss}`);return;
+}
+snakeData.unshift(h);
+if(h.x===food.x&&h.y===food.y){
+ss++; coins++; save();
+do{food={x:Math.floor(Math.random()*20),y:Math.floor(Math.random()*20)}}
+while(snakeData.some(s=>s.x===food.x&&s.y===food.y));
+}else snakeData.pop();
+drawS();
+}
+function drawS(){
+let c=document.getElementById("sc");if(!c)return;
+let x=c.getContext("2d");x.clearRect(0,0,320,320);
+x.fillStyle="#050308";x.fillRect(0,0,320,320);
+x.fillStyle="#ef4444";x.fillRect(food.x*16,food.y*16,15,15);
+x.fillStyle=getComputedStyle(document.body).getPropertyValue("--a");
+snakeData.forEach(s=>x.fillRect(s.x*16,s.y*16,15,15));
+}
+let level=1,bl=[],bx=180,by=380,dx=3,dy=-4,pad=145,bt=null,pups=[],scoreB=0,brickStarted=false,livesB=3;
+
+function brick(){
+open();
+document.getElementById("content").innerHTML=`<div class="gameTop"><h2>🧱 Brick Breaker — Level ${level}</h2><button onclick="exitGame()">↩ BACK</button></div>
+<p>❤️ Lives: <b id="livesB">3</b> &nbsp; • &nbsp; Normal • Strong • Reinforced • 🎁 Power-ups</p>
+<p>Normal • Strong • Reinforced • 🎁 Power-ups</p>
+<canvas id="bc" width="360" height="420"></canvas>
+<p id="bstatus">Move the paddle with touch, mouse, or ◀ ▶ keys.</p>
+<button class="primary" onclick="bs()">▶ START LEVEL</button>
+<button onclick="loadB(true)">🔄 RETRY</button>
+<button onclick="full()">⛶ FULLSCREEN</button><button id="fsBack" class="hidden" onclick="exitFullscreen()">↩ BACK TO NORMAL</button>`;
+loadB();
+}
+
+function loadB(resetLives=true){
+clearInterval(bt);bl=[];pups=[];scoreB=0;brickStarted=false;if(resetLives) livesB=3;const le=document.getElementById("livesB");if(le)le.textContent=livesB;
+let rows=Math.min(3+level,8);
+for(let r=0;r<rows;r++)for(let c=0;c<6;c++){
+let type=level<3?((r+c)%4===0?"strong":"normal"):((r+c)%4===0?"reinforced":(r+c)%2?"strong":"normal");
+bl.push({x:15+c*57,y:30+r*27,w:50,h:20,t:type,hp:type==="normal"?1:type==="strong"?2:3});
+}
+bx=180;by=380;dx=2.7+level*.15;dy=-(3.2+level*.12);pad=145;drawB();
+let c=document.getElementById("bc"),sx=0;
+if(c){
+c.onmousemove=e=>movePad(e.clientX-c.getBoundingClientRect().left);
+c.ontouchstart=e=>{sx=e.touches[0].clientX;movePad(sx-c.getBoundingClientRect().left);};
+c.ontouchmove=e=>{movePad(e.touches[0].clientX-c.getBoundingClientRect().left);e.preventDefault();};
+}
+}
+
+function movePad(x){pad=Math.max(0,Math.min(290,x-35));}
+function bs(){if(brickStarted)return;brickStarted=true;clearInterval(bt);bt=setInterval(loopB,16);}
+function spawnPower(b){
+let types=["wide","slow","multi","coin"];
+if(Math.random()<0.28)pups.push({x:b.x+b.w/2,y:b.y+10,type:types[Math.floor(Math.random()*types.length)],vy:2.2});
+}
+function applyPower(type){
+if(type==="wide"){pad=Math.min(270,pad);window.wideUntil=Date.now()+7000;}
+if(type==="slow"){window.slowUntil=Date.now()+6000;}
+if(type==="multi"){window.multiUntil=Date.now()+7000;}
+if(type==="coin"){coins+=5;save();}
+}
+function updatePowerStatus(){
+
+let now=Date.now();
+let active=[];
+
+if(window.wideUntil && window.wideUntil>now)
+active.push("🟢 Wide: "+Math.ceil((window.wideUntil-now)/1000)+"s");
+
+if(window.slowUntil && window.slowUntil>now)
+active.push("🔵 Slow: "+Math.ceil((window.slowUntil-now)/1000)+"s");
+
+if(window.multiUntil && window.multiUntil>now)
+active.push("🟠 Multi: "+Math.ceil((window.multiUntil-now)/1000)+"s");
+
+let el=document.getElementById("powerStatus");
+
+if(el)
+el.textContent=active.length
+?active.join("  •  ")
+:"";
+
+}
+
+function drawB(){
+let c=document.getElementById("bc");if(!c)return;
+let x=c.getContext("2d");x.clearRect(0,0,360,420);x.fillStyle="#030206";x.fillRect(0,0,360,420);
+bl.forEach(b=>{
+x.fillStyle=b.t==="normal"?"#a855f7":b.t==="strong"?"#3b82f6":"#f97316";
+x.fillRect(b.x,b.y,b.w,b.h);x.strokeStyle="#fff8";x.strokeRect(b.x,b.y,b.w,b.h);
+});
+pups.forEach(p=>{x.fillStyle=p.type==="wide"?"#22c55e":p.type==="slow"?"#3b82f6":p.type==="multi"?"#f97316":"#eab308";x.beginPath();x.arc(p.x,p.y,8,0,Math.PI*2);x.fill();x.fillStyle="#111";x.font="10px Arial";x.textAlign="center";x.fillText(p.type[0].toUpperCase(),p.x,p.y+3);});
+let paddleW=(window.wideUntil&&Date.now()<window.wideUntil)?110:70;
+x.fillStyle=getComputedStyle(document.body).getPropertyValue("--a");x.fillRect(pad,395,paddleW,10);
+x.beginPath();x.arc(bx,by,7,0,Math.PI*2);x.fill();
+}
+function loopB(){
+const slow=(window.slowUntil||0)>Date.now();
+const speedFactor=slow?0.55:1;
+bx+=dx*speedFactor;
+by+=dy*speedFactor;
+
+if(bx-7<=2){bx=9;dx=Math.abs(dx)}
+if(bx+7>=358){bx=351;dx=-Math.abs(dx)}
+if(by-7<=2){by=9;dy=Math.abs(dy)}
+
+const paddleW=(window.wideUntil||0)>Date.now()?110:70;
+if(by+7>=395 && by-7<=407 && bx>=pad && bx<=pad+paddleW && dy>0){
+  const hit=(bx-(pad+paddleW/2))/(paddleW/2);
+  dx=Math.max(-5,Math.min(5,hit*4.5));
+  dy=-Math.abs(dy);
+  by=387;
+}
+
+for(let i=bl.length-1;i>=0;i--){
+  const b=bl[i];
+  if(bx+7>b.x && bx-7<b.x+b.w && by+7>b.y && by-7<b.y+b.h){
+    const prevY=by-dy*speedFactor;
+    const prevX=bx-dx*speedFactor;
+    if(prevY+7<=b.y || prevY-7>=b.y+b.h) dy*=-1;
+    else dx*=-1;
+    b.hp--;
+    scoreB++;
+    const se=document.getElementById("brickScore");
+    if(se)se.textContent=scoreB;
+    if(b.hp<=0){spawnPower(b);bl.splice(i,1)}
+    break;
+  }
+}
+
+for(let i=pups.length-1;i>=0;i--){
+  const p=pups[i];
+  p.y+=p.vy;
+  if(p.y+8>=395 && p.x>=pad && p.x<=pad+paddleW){
+    applyPower(p.type);pups.splice(i,1);
+  }else if(p.y>430)pups.splice(i,1);
+}
+updatePowerStatus();
+
+if(bl.length===0){
+  clearInterval(bt);brickStarted=false;
+  coins+=10;
+  updateQuest("brick1",1);
+  save();
+  showGameResult("🎉","LEVEL COMPLETE",`Level ${level} complete! 🪙 +10<br>Score: ${scoreB}`,
+    `this.closest('.modal').remove();level++;brick()`);
+  return;
+}
+
+if(by-7>420){
+  livesB--;
+  const le=document.getElementById("livesB");
+  if(le)le.textContent=livesB;
+  clearInterval(bt);brickStarted=false;
+  if(livesB>0){
+    bx=180;by=380;
+    dx=(Math.random()<.5?-1:1)*(2.7+level*.15);
+    dy=-(3.2+level*.12);
+    drawB();
+    showGameResult("❤️","LIFE LOST",`You have ${livesB} ${livesB===1?"life":"lives"} left.`,"this.closest('.modal').remove()");
+  }else{
+    showGameResult("💥","GAME OVER","You used all 3 lives. Press RETRY to play again.","this.closest('.modal').remove()");
+  }
+  return;
+}
+drawB();
+}
+function showGameResult(icon,title,msg,extra="this.closest('.modal').remove()"){
+  const d=document.createElement("div");
+  d.className="modal";
+  d.innerHTML=`<div class="box" style="text-align:center"><div style="font-size:50px">${icon}</div><h2>${title}</h2><p>${msg}</p><button class="primary" onclick="${extra}">← BACK</button></div>`;
+  document.body.appendChild(d);
+}
+function reaction(){open();document.getElementById("content").innerHTML=`<h2>⚡ Reaction Test</h2><p id="rt">Wait...</p><button id="rb" style="width:100%;height:180px;background:#7f1d1d;color:white;font-size:25px" onclick="rc()">WAIT</button><br><button onclick="reaction()">🔄 RETRY</button>`;window.rr=false;window.rtime=0;setTimeout(()=>{rr=true;rtime=performance.now();rb.style.background="#15803d";rb.textContent="CLICK!"},1000+Math.random()*2500)}
+function rc(){if(!rr){rt.textContent="❌ Too early!";return}rr=false;rt.textContent=`⚡ ${Math.round(performance.now()-rtime)} ms`}
+let cells=[],tttTurn="X";
+function ttt(){cells=Array(9).fill("");tttTurn="X";open();tr();}
+function tr(){
+content.innerHTML=`<h2>❌⭕ Tic-Tac-Toe — 2 Players</h2>
+<p>Player 1: ❌ X &nbsp; | &nbsp; Player 2: ⭕ O</p>
+<h3 style="text-align:center">Turn: ${tttTurn==="X"?"Player 1 ❌":"Player 2 ⭕"}</h3>
+<div style="display:grid;grid-template-columns:repeat(3,80px);gap:6px;justify-content:center">
+${cells.map((v,i)=>`<button style="height:80px;font-size:30px" onclick="tm(${i})">${v}</button>`).join("")}
+</div><br><button onclick="ttt()">🔄 RESTART</button>`;
+}
+function tm(i){
+if(cells[i])return;
+cells[i]=tttTurn;
+if(win(tttTurn)){
+coins+=10;save();return back("🏆",tttTurn==="X"?"PLAYER 1 WINS":"PLAYER 2 WINS","Great game!");
+}
+if(cells.every(Boolean))return back("🤝","DRAW","Good game!");
+tttTurn=tttTurn==="X"?"O":"X";tr();
+}
+function win(p){
+return [[0,1,2],[3,4,5],[6,7,8],[0,3,6],[1,4,7],[2,5,8],[0,4,8],[2,4,6]].some(a=>a.every(i=>cells[i]===p));
+}
+
+function feedbackForm(){open();content.innerHTML=`<h2>💬 Feedback</h2><input value="${esc(user)}" readonly><select id="rating"><option>5</option><option>4</option><option>3</option><option>2</option><option>1</option></select><textarea id="ft" rows="5" placeholder="Your feedback..."></textarea><button class="primary" onclick="submitFB()">SUBMIT</button>`}
+function submitFB(){if(!ft.value.trim())return;fb.unshift({u:user,r:+rating.value,t:ft.value,reply:""});save();closeModal();alert("Thanks for your feedback!")}
+function renderFB(){feedback.innerHTML=fb.map((f,i)=>`<div class="feedback"><b>👤 ${esc(f.u)}</b><div>${"⭐".repeat(f.r)}</div><p>${esc(f.t)}</p>${f.reply?`<div class="owner">👑 ${OWNER}</div><p>${esc(f.reply)}</p>`:""}${user===OWNER&&!f.reply?`<button onclick="replyFB(${i})">↩ Reply</button>`:""}</div>`).join("")}
+function replyFB(i){if(user!==OWNER)return;let r=prompt("Reply as InviziblePlayz:");if(r){fb[i].reply=r;save()}}
+function back(i,t,p){let d=document.createElement("div");d.className="modal";d.innerHTML=`<div class="box" style="text-align:center"><div style="font-size:50px">${i}</div><h2>${t}</h2><p>${p}</p><button class="primary" onclick="this.closest('.modal').remove()">← BACK</button></div>`;document.body.appendChild(d)}
+function details(game){const info={snake:["🐍 Snake","Eat the red food, grow your snake and avoid the walls and yourself. Use the on-screen arrows, swipe or keyboard arrows."],brick:["🧱 Brick Breaker","Break every brick to complete the level. You have 3 lives. Use touch, mouse or ◀ ▶ to move the paddle. Power-ups can make the paddle wide, slow the ball, create multi-ball effects or give coins."],reaction:["⚡ Reaction Test","Wait until the button turns green, then tap as quickly as possible. Tapping too early counts as a mistake."],ttt:["❌⭕ Tic-Tac-Toe","Two players play locally: Player 1 is X and Player 2 is O. Take turns until one player wins or the board is full."]};const x=info[game];open();document.getElementById("content").innerHTML=`<h2>${x[0]}</h2><p>${x[1]}</p><button class="primary" onclick="${game==='snake'?'snake()':game==='brick'?'brick()':game==='reaction'?'reaction()':'ttt()'}">▶ PLAY NOW</button>`;}
+function full(){
+  const el=document.getElementById("content");
+  if(!el)return;
+  el.classList.add("fullscreen-game");
+  if(el.requestFullscreen)el.requestFullscreen();
+  document.getElementById("fsBack")?.classList.remove("hidden");
+}
+function exitFullscreen(){
+  if(document.fullscreenElement&&document.exitFullscreen)document.exitFullscreen();
+  document.getElementById("content")?.classList.remove("fullscreen-game");
+  document.getElementById("fsBack")?.classList.add("hidden");
+}
+function exitGame(){exitFullscreen();closeModal();}
+document.addEventListener("fullscreenchange",()=>{
+  const b=document.getElementById("fsBack");
+  if(!b)return;
+  if(document.fullscreenElement)b.classList.remove("hidden");
+  else{b.classList.add("hidden");document.getElementById("content")?.classList.remove("fullscreen-game");}
+});
+document.addEventListener("keydown",e=>{if(["ArrowUp","ArrowDown","ArrowLeft","ArrowRight"].includes(e.key))e.preventDefault();if(document.getElementById("bc")){if(e.key==="ArrowLeft")pad=Math.max(0,pad-25);if(e.key==="ArrowRight")pad=Math.min(290,pad+25);}else{if(e.key==="ArrowUp")sd(0,-1);if(e.key==="ArrowDown")sd(0,1);if(e.key==="ArrowLeft")sd(-1,0);if(e.key==="ArrowRight")sd(1,0);}});
+/* ===== REAL QUEST + ACHIEVEMENT SYSTEM ===== */
+const QUESTS=[
+ {id:"play3",title:"Arcade Starter",desc:"Play any 3 games",goal:3,reward:30,stat:"gamesPlayed",ach:"🎮 Arcade Starter"},
+ {id:"snake5",title:"Snake Hunter",desc:"Eat 5 Snake foods",goal:5,reward:25,stat:"snakeFood",ach:"🐍 Snake Hunter"},
+ {id:"brick1",title:"Brick Breaker",desc:"Complete 1 Brick Breaker level",goal:1,reward:40,stat:"brickLevels",ach:"🧱 Brick Breaker"},
+ {id:"ttt1",title:"Tic-Tac-Toe Champion",desc:"Win 1 Tic-Tac-Toe match",goal:1,reward:30,stat:"tttWins",ach:"❌⭕ TTT Champion"},
+ {id:"reaction1",title:"Quick Reflexes",desc:"Get a reaction time under 500 ms",goal:1,reward:35,stat:"fastReaction",ach:"⚡ Quick Reflexes"}
+];
+let progress=JSON.parse(localStorage.getItem("ia_progress")||'{"gamesPlayed":0,"snakeFood":0,"brickLevels":0,"tttWins":0,"fastReaction":0}');
+let done=JSON.parse(localStorage.getItem("ia_done")||"[]");
+
+function updateQuest(id,amount=1){
+ const q=QUESTS.find(x=>x.id===id);
+ if(!q||done.includes(id))return;
+ progress[q.stat]=Math.min(q.goal,Number(progress[q.stat]||0)+amount);
+ if(progress[q.stat]>=q.goal){
+   done.push(id);
+   coins+=q.reward;
+   if(!ach.includes(q.ach))ach.push(q.ach);
+ }
+ localStorage.setItem("ia_progress",JSON.stringify(progress));
+ localStorage.setItem("ia_done",JSON.stringify(done));
+ save();
+ renderProfile();
+}
+function renderProfile(){
+ const list=document.getElementById("clist");
+ if(list)list.innerHTML=QUESTS.map(q=>{
+   const v=Math.min(Number(progress[q.stat]||0),q.goal),ok=done.includes(q.id);
+   return `<div class="panel" style="margin:8px 0">
+   <div style="display:flex;justify-content:space-between"><b>${ok?"✅":"🎯"} ${q.title}</b><span>🪙 +${q.reward}</span></div>
+   <small>${q.desc}</small>
+   <div style="height:8px;background:var(--line);border-radius:8px;margin:8px 0">
+   <div style="height:100%;width:${Math.round(v/q.goal*100)}%;background:var(--a);border-radius:8px"></div></div>
+   <small>${v}/${q.goal}${ok?" — COMPLETE ✓":""}</small></div>`;
+ }).join("");
+ const a=document.getElementById("alist");
+ if(a)a.innerHTML=QUESTS.map(q=>`<div class="panel">${done.includes(q.id)?"🏆":"🔒"} ${q.ach} ${done.includes(q.id)?"✓":"— Complete its quest to unlock"}</div>`).join("");
+}
+
+const _profile=profile;
+profile=function(){
+ document.getElementById("prof").classList.remove("hidden");
+ document.getElementById("pi").innerHTML=`<div class="panel">👤 <b>${esc(user)}</b><br><br>🪙 ${coins} Coins<br>🏆 ${ach.length}/${QUESTS.length} Achievements</div>`;
+ renderProfile();
+};
+
+const _ssStart=ssStart;
+ssStart=function(run=true){_ssStart(run);if(run)updateQuest("play3");};
+
+const _tickS=tickS;
+tickS=function(){
+ const old=ss;_tickS();
+ if(ss>old)updateQuest("snake5");
+};
+
+const _brick=brick;
+brick=function(){_brick();};
+const _bs=bs;
+bs=function(){
+ const was=brickStarted;_bs();
+ if(!was&&brickStarted)updateQuest("play3");
+};
+
+const _reaction=reaction;
+reaction=function(){_reaction();updateQuest("play3");};
+
+const _ttt=ttt;
+ttt=function(){_ttt();updateQuest("play3");};
+
+const _tm=tm;
+tm=function(i){
+ const player=tttTurn;
+ _tm(i);
+ if(win(player))updateQuest("ttt1");
+};
+
+const _rc=rc;
+rc=function(){
+ if(!rr){_rc();return;}
+ const started=rtime;
+ _rc();
+ const ms=Math.round(performance.now()-started);
+ if(ms<500)updateQuest("reaction1");
+};
+
+mode(localStorage.getItem("ia_mode")||"dark");theme(localStorage.getItem("ia_theme")||"purple");render();renderProfile();
+</script>
+</body>
+</html>
